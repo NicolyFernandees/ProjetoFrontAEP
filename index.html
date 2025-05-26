@@ -1,0 +1,504 @@
+<!DOCTYPE html>
+<html lang="en">
+<head>
+    <meta charset="UTF-8">
+    <meta name="viewport" content="width=device-width, initial-scale=1.0">
+    <title>Document</title>
+</head>
+<body>
+    <!DOCTYPE html>
+<html lang="pt-BR">
+<head>
+    <meta charset="UTF-8">
+    <meta name="viewport" content="width=device-width, initial-scale=1.0">
+    <title>PR-323 Paiçandu - Simulação Semafórica para Viadutos</title>
+    <style>
+        * {
+            margin: 0;
+            padding: 0;
+            box-sizing: border-box;
+        }
+
+        body {
+            font-family: 'Arial', sans-serif;
+            background: linear-gradient(135deg, #2c5530 0%, #4a7c59 100%);
+            min-height: 100vh;
+            color: #333;
+        }
+
+        .container {
+            max-width: 1400px;
+            margin: 0 auto;
+            padding: 20px;
+        }
+
+        .header {
+            text-align: center;
+            color: white;
+            margin-bottom: 30px;
+        }
+
+        .header h1 {
+            font-size: 2.8rem;
+            margin-bottom: 10px;
+            text-shadow: 2px 2px 4px rgba(0,0,0,0.3);
+        }
+
+        .header .subtitle {
+            font-size: 1.4rem;
+            opacity: 0.9;
+            margin-bottom: 5px;
+        }
+
+        .header .location {
+            font-size: 1.1rem;
+            opacity: 0.8;
+            font-style: italic;
+        }
+
+        .simulation-container {
+            background: white;
+            border-radius: 15px;
+            padding: 30px;
+            box-shadow: 0 15px 35px rgba(0,0,0,0.2);
+            margin-bottom: 30px;
+        }
+
+        .pr323-map {
+            position: relative;
+            height: 500px;
+            background: linear-gradient(to bottom, #87CEEB 0%, #87CEEB 25%, #90EE90 25%, #90EE90 75%, #8FBC8F 75%);
+            border-radius: 10px;
+            overflow: hidden;
+            margin-bottom: 30px;
+            border: 3px solid #2c5530;
+        }
+
+        .highway {
+            position: absolute;
+            top: 50%;
+            left: 0;
+            right: 0;
+            height: 120px;
+            background: #2c2c2c;
+            transform: translateY(-50%);
+            border: 4px solid #1a1a1a;
+        }
+
+        .highway::before {
+            content: '';
+            position: absolute;
+            top: 50%;
+            left: 0;
+            right: 0;
+            height: 3px;
+            background: repeating-linear-gradient(
+                to right,
+                #FFD700 0px,
+                #FFD700 30px,
+                transparent 30px,
+                transparent 60px
+            );
+            transform: translateY(-50%);
+        }
+
+        .highway-lanes {
+            position: absolute;
+            top: 25%;
+            left: 0;
+            right: 0;
+            height: 2px;
+            background: repeating-linear-gradient(
+                to right,
+                white 0px,
+                white 20px,
+                transparent 20px,
+                transparent 40px
+            );
+        }
+
+        .highway-lanes:last-child {
+            top: 75%;
+        }
+
+        .viaduct {
+            position: absolute;
+            top: 30%;
+            height: 160px;
+            width: 100px;
+            background: #666;
+            border: 3px solid #444;
+            border-radius: 5px;
+        }
+
+        .viaduct.start {
+            left: 15%;
+        }
+
+        .viaduct.end {
+            right: 15%;
+        }
+
+        .viaduct::before {
+            content: '';
+            position: absolute;
+            top: -20px;
+            left: 50%;
+            transform: translateX(-50%);
+            width: 80px;
+            height: 15px;
+            background: #888;
+            border-radius: 5px;
+        }
+
+        .traffic-light {
+            position: absolute;
+            top: -80px;
+            left: 50%;
+            transform: translateX(-50%);
+            width: 50px;
+            height: 140px;
+            background: #333;
+            border-radius: 8px;
+            padding: 8px;
+            box-shadow: 0 5px 15px rgba(0,0,0,0.4);
+        }
+
+        .light {
+            width: 34px;
+            height: 34px;
+            border-radius: 50%;
+            margin-bottom: 8px;
+            border: 2px solid #555;
+            transition: all 0.3s ease;
+        }
+
+        .light.red {
+            background: #ff4444;
+            box-shadow: 0 0 25px rgba(255, 68, 68, 0.6);
+        }
+
+        .light.yellow {
+            background: #ffff44;
+            box-shadow: 0 0 25px rgba(255, 255, 68, 0.6);
+        }
+
+        .light.green {
+            background: #44ff44;
+            box-shadow: 0 0 25px rgba(68, 255, 68, 0.6);
+        }
+
+        .light.off {
+            background: #666;
+            box-shadow: none;
+        }
+
+        .landmark {
+            position: absolute;
+            background: #fff;
+            padding: 5px 10px;
+            border-radius: 15px;
+            font-size: 12px;
+            font-weight: bold;
+            color: #333;
+            box-shadow: 0 2px 8px rgba(0,0,0,0.2);
+            border: 2px solid #2c5530;
+        }
+
+        .landmark.mercado {
+            top: 20%;
+            left: 25%;
+        }
+
+        .landmark.camilo {
+            top: 15%;
+            left: 45%;
+        }
+
+        .landmark.hotel {
+            bottom: 20%;
+            left: 35%;
+        }
+
+        .landmark.arena {
+            bottom: 25%;
+            right: 30%;
+        }
+
+        .car {
+            position: absolute;
+            top: 45%;
+            width: 35px;
+            height: 18px;
+            border-radius: 4px;
+            transition: left 3s linear;
+            z-index: 10;
+        }
+
+        .car.lane1 { top: 42%; }
+        .car.lane2 { top: 58%; }
+
+        .car:nth-child(1) { background: #ff6b6b; }
+        .car:nth-child(2) { background: #4ecdc4; }
+        .car:nth-child(3) { background: #45b7d1; }
+        .car:nth-child(4) { background: #f9ca24; }
+        .car:nth-child(5) { background: #6c5ce7; }
+        .car:nth-child(6) { background: #fd79a8; }
+
+        .car::before, .car::after {
+            content: '';
+            position: absolute;
+            bottom: -3px;
+            width: 5px;
+            height: 5px;
+            background: #333;
+            border-radius: 50%;
+        }
+
+        .car::before { left: 3px; }
+        .car::after { right: 3px; }
+
+        .ribeirao {
+            position: absolute;
+            bottom: 0;
+            left: 60%;
+            right: 0;
+            height: 40px;
+            background: linear-gradient(45deg, #4a90e2, #7bb3f0);
+            border-radius: 20px 20px 0 0;
+        }
+
+        .ribeirao::before {
+            content: 'Ribeirão Paiçandu';
+            position: absolute;
+            top: -25px;
+            left: 10px;
+            font-size: 11px;
+            color: #2c5530;
+            font-weight: bold;
+        }
+
+        .controls-panel {
+            display: grid;
+            grid-template-columns: repeat(auto-fit, minmax(200px, 1fr));
+            gap: 20px;
+            margin-bottom: 30px;
+        }
+
+        .control-section {
+            background: #f8f9fa;
+            padding: 20px;
+            border-radius: 12px;
+            border: 2px solid #2c5530;
+        }
+
+        .control-section h3 {
+            color: #2c5530;
+            margin-bottom: 15px;
+            text-align: center;
+            font-size: 1.1rem;
+        }
+
+        .control-group {
+            margin-bottom: 15px;
+        }
+
+        .control-group label {
+            display: block;
+            margin-bottom: 5px;
+            font-weight: bold;
+            color: #555;
+            font-size: 14px;
+        }
+
+        .control-group input {
+            width: 100%;
+            padding: 8px;
+            border: 2px solid #ddd;
+            border-radius: 6px;
+            text-align: center;
+            font-size: 16px;
+        }
+
+        .btn {
+            background: #2c5530;
+            color: white;
+            border: none;
+            padding: 12px 20px;
+            border-radius: 25px;
+            cursor: pointer;
+            font-size: 14px;
+            font-weight: bold;
+            transition: all 0.3s ease;
+            margin: 5px;
+            width: 100%;
+        }
+
+        .btn:hover {
+            background: #1e3a21;
+            transform: translateY(-2px);
+        }
+
+        .btn.stop {
+            background: #dc3545;
+        }
+
+        .btn.stop:hover {
+            background: #c82333;
+        }
+
+        .status-display {
+            text-align: center;
+            padding: 15px;
+            border-radius: 10px;
+            margin-bottom: 20px;
+            font-weight: bold;
+            font-size: 1.1rem;
+        }
+
+        .status-display.active {
+            background: #d4edda;
+            color: #155724;
+            border: 2px solid #2c5530;
+        }
+
+        .status-display.inactive {
+            background: #f8d7da;
+            color: #721c24;
+            border: 2px solid #dc3545;
+        }
+
+        .statistics-grid {
+            display: grid;
+            grid-template-columns: repeat(auto-fit, minmax(200px, 1fr));
+            gap: 20px;
+            margin-top: 30px;
+        }
+
+        .stat-card {
+            background: white;
+            padding: 25px;
+            border-radius: 12px;
+            box-shadow: 0 8px 20px rgba(0,0,0,0.1);
+            text-align: center;
+            border: 3px solid #2c5530;
+        }
+
+        .stat-number {
+            font-size: 2.8rem;
+            font-weight: bold;
+            color: #2c5530;
+            margin-bottom: 10px;
+        }
+
+        .stat-label {
+            color: #666;
+            font-size: 1.1rem;
+            font-weight: 500;
+        }
+
+        .viaduct-info {
+            background: #e8f5e8;
+            padding: 15px;
+            border-radius: 10px;
+            margin-bottom: 20px;
+            border-left: 5px solid #2c5530;
+        }
+
+        .viaduct-info h4 {
+            color: #2c5530;
+            margin-bottom: 10px;
+        }
+
+        @media (max-width: 768px) {
+            .header h1 { font-size: 2.2rem; }
+            .pr323-map { height: 350px; }
+            .controls-panel { grid-template-columns: 1fr; }
+            .landmark { font-size: 10px; padding: 3px 6px; }
+        }
+    </style>
+</head>
+<body>
+    <div class="container">
+        <div class="header">
+            <h1>🚦 Simulação PR-323 Paiçandu</h1>
+            <div class="subtitle">Solução Semafórica para Viadutos Congestionados</div>
+            <div class="location">Rodovia Estadual PR-323 - Paiçandu/PR</div>
+        </div>
+
+        <div class="simulation-container">
+            <div class="viaduct-info">
+                <h4>📍 Situação Atual dos Viadutos na PR-323</h4>
+                <p>A PR-323 possui viadutos críticos no início e final da rodovia que enfrentam congestionamentos diários devido à ausência de sinalização semafórica adequada. Esta simulação demonstra como a implementação de semáforos pode melhorar significativamente o fluxo de tráfego e a segurança viária.</p>
+            </div>
+
+            <div id="systemStatus" class="status-display inactive">
+                🔴 Sistema Inativo - Clique em "Iniciar Simulação" para ativar os semáforos
+            </div>
+
+            <div class="pr323-map">
+                <!-- Rodovia Principal -->
+                <div class="highway">
+                    <div class="highway-lanes"></div>
+                    <div class="highway-lanes"></div>
+                </div>
+
+                <!-- Viaduto do Início -->
+                <div class="viaduct start">
+                    <div class="traffic-light">
+                        <div id="startRed" class="light red"></div>
+                        <div id="startYellow" class="light off"></div>
+                        <div id="startGreen" class="light off"></div>
+                    </div>
+                </div>
+
+                <!-- Viaduto do Final -->
+                <div class="viaduct end">
+                    <div class="traffic-light">
+                        <div id="endRed" class="light red"></div>
+                        <div id="endYellow" class="light off"></div>
+                        <div id="endGreen" class="light off"></div>
+                    </div>
+                </div>
+
+                <!-- Pontos de Referência -->
+                <div class="landmark mercado">🏪 Mercado do Gastão</div>
+                <div class="landmark camilo">🛒 Camilo Atacadista</div>
+                <div class="landmark hotel">🏨 Hotéis</div>
+                <div class="landmark arena">🏟️ Arena Molina</div>
+
+                <!-- Ribeirão -->
+                <div class="ribeirao"></div>
+
+                <!-- Veículos -->
+                <div id="car1" class="car lane1" style="left: -40px;"></div>
+                <div id="car2" class="car lane2" style="left: -90px;"></div>
+                <div id="car3" class="car lane1" style="left: -140px;"></div>
+                <div id="car4" class="car lane2" style="left: -190px;"></div>
+                <div id="car5" class="car lane1" style="left: -240px;"></div>
+                <div id="car6" class="car lane2" style="left: -290px;"></div>
+            </div>
+
+            <div class="controls-panel">
+                <div class="control-section">
+                    <h3>⏱️ Configuração de Tempos</h3>
+                    <div class="control-group">
+                        <label for="redDuration">Tempo Vermelho (segundos)</label>
+                        <input type="number" id="redDuration" value="12" min="5" max="30">
+                    </div>
+                    <div class="control-group">
+                        <label for="yellowDuration">Tempo Amarelo (segundos)</label>
+                        <input type="number" id="yellowDuration" value="4" min="2" max="8">
+                    </div>
+                    <div class="control-group">
+                        <label for="greenDuration">Tempo Verde (segundos)</label>
+                        <input type="number" id="greenDuration" value="15" min="8" max="40">
+                    </div>
+                </div>
+
+                <div class="control-section">
+                    <h3>🎮 Controles do Sistema</h3>
+                    <button id="startSimulation" class="btn">▶️ Iniciar Simulação</button>
+                    <button id="
+</body>
+</html>
