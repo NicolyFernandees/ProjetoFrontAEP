@@ -1,0 +1,211 @@
+body {
+    font-family: Arial, sans-serif;
+    margin: 0;
+    padding: 0;
+    background-color: #f0f0f0;
+    color: #333;
+    display: flex;
+    flex-direction: column;
+    align-items: center;
+}
+
+header {
+    background-color: #333;
+    color: white;
+    padding: 15px 0;
+    width: 100%;
+    text-align: center;
+    box-shadow: 0 2px 5px rgba(0,0,0,0.2);
+}
+
+header h1 {
+    margin: 0;
+    font-size: 1.8em;
+}
+
+header p {
+    margin: 5px 0 0;
+    font-size: 0.9em;
+    color: #ccc;
+}
+
+main {
+    width: 90%;
+    max-width: 1000px;
+    background-color: white;
+    margin: 20px 0;
+    padding: 20px;
+    border-radius: 8px;
+    box-shadow: 0 0 10px rgba(0,0,0,0.1);
+}
+
+section {
+    margin-bottom: 30px;
+}
+
+h2 {
+    color: #0056b3;
+    border-bottom: 2px solid #0056b3;
+    padding-bottom: 5px;
+    margin-bottom: 15px;
+}
+
+p {
+    line-height: 1.6;
+    margin-bottom: 10px;
+}
+
+.simulation-area {
+    text-align: center;
+    background-color: #e6e6e6;
+    padding: 20px;
+    border-radius: 8px;
+    border: 1px solid #ddd;
+}
+
+.scenario-description {
+    font-style: italic;
+    color: #555;
+    margin-bottom: 20px;
+}
+
+.viaduct-container {
+    display: flex;
+    align-items: center;
+    justify-content: space-around;
+    background-color: #6c757d; /* Cor do asfalto */
+    padding: 20px;
+    border-radius: 10px;
+    position: relative;
+    height: 150px; /* Altura do viaduto */
+    overflow: hidden; /* Para esconder carros que saem */
+}
+
+.viaduct-center {
+    background-color: #495057; /* Cor do centro do viaduto */
+    color: white;
+    padding: 10px 20px;
+    border-radius: 5px;
+    font-weight: bold;
+    font-size: 1.1em;
+}
+
+.lane {
+    width: 40%;
+    height: 80px;
+    background-color: #5a6268; /* Faixa de rolamento */
+    border-radius: 5px;
+    display: flex;
+    align-items: center;
+    position: relative;
+    overflow: hidden;
+}
+
+.lane-1 {
+    justify-content: flex-end; /* Carros vêm da direita para a esquerda */
+}
+
+.lane-2 {
+    justify-content: flex-start; /* Carros vêm da esquerda para a direita */
+}
+
+.car {
+    width: 30px;
+    height: 20px;
+    background-color: #ffc107; /* Cor do carro */
+    border-radius: 3px;
+    position: absolute;
+    animation: none; /* Controlado por JS */
+}
+
+/* Posições iniciais dos carros */
+.car-1 { left: -40px; background-color: #17a2b8; }
+.car-2 { left: -100px; background-color: #28a745; }
+.car-3 { right: -40px; background-color: #dc3545; }
+.car-4 { right: -100px; background-color: #6f42c1; }
+
+
+.semaphore-container {
+    display: flex;
+    flex-direction: column;
+    background-color: #495057;
+    padding: 5px;
+    border-radius: 5px;
+    box-shadow: inset 0 0 5px rgba(0,0,0,0.5);
+    margin: 0 15px;
+}
+
+.light {
+    width: 25px;
+    height: 25px;
+    border-radius: 50%;
+    background-color: #333; /* Cor desligada */
+    margin: 3px;
+    border: 1px solid #222;
+}
+
+/* Cores das luzes */
+.light.red { background-color: #dc3545; }
+.light.yellow { background-color: #ffc107; }
+.light.green { background-color: #28a745; }
+
+/* Semáforo desligado */
+.light:not(.active) {
+    opacity: 0.2; /* Escurece as luzes inativas */
+}
+
+/* Luzes ativas */
+.light.red.active { background-color: #dc3545; opacity: 1; }
+.light.yellow.active { background-color: #ffc107; opacity: 1; }
+.light.green.active { background-color: #28a745; opacity: 1; }
+
+.controls {
+    margin-top: 25px;
+}
+
+.controls button {
+    padding: 10px 20px;
+    font-size: 1em;
+    margin: 0 10px;
+    border: none;
+    border-radius: 5px;
+    cursor: pointer;
+    transition: background-color 0.3s ease;
+    background-color: #007bff;
+    color: white;
+}
+
+.controls button:hover {
+    background-color: #0056b3;
+}
+
+footer {
+    width: 100%;
+    background-color: #333;
+    color: white;
+    text-align: center;
+    padding: 10px 0;
+    margin-top: 30px;
+}
+
+footer ul {
+    list-style: none;
+    padding: 0;
+    margin: 5px 0;
+    font-size: 0.8em;
+}
+
+footer li {
+    margin-bottom: 3px;
+}
+
+/* Animação dos carros */
+@keyframes carMoveRight {
+    from { transform: translateX(0); }
+    to { transform: translateX(calc(100% + 40px)); } /* Passa da tela */
+}
+
+@keyframes carMoveLeft {
+    from { transform: translateX(0); }
+    to { transform: translateX(calc(-100% - 40px)); } /* Passa da tela */
+}
